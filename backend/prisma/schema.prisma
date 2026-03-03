@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(OPERATOR)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Vehicle {
+  id             String      @id @default(cuid())
+  vin            String      @unique
+  fleetCode      String
+  model          String
+  manufacturer   String
+  commissioningDate DateTime?
+  batteryPacks   BatteryPack[]
+  telemetry      Telemetry[]
+  alerts         Alert[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model BatteryPack {
+  id               String   @id @default(cuid())
+  vehicleId        String
+  serialNumber     String   @unique
+  chemistry        String
+  capacityKWh      Float
+  nominalVoltage   Float
+  cycleCount       Int      @default(0)
+  sohPercent       Float     @default(100)
+  vehicle          Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Telemetry {
+  id                 String   @id @default(cuid())
+  vehicleId          String
+  timestamp          DateTime @default(now())
+  socPercent         Float
+  batteryTempC       Float
+  packVoltageV       Float
+  packCurrentA       Float
+  insulationOhm      Float
+  latitude           Float?
+  longitude          Float?
+  speedKmph          Float?
+  isCharging         Boolean  @default(false)
+  vehicle            Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, timestamp])
+}
+
+model Alert {
+  id            String        @id @default(cuid())
+  vehicleId     String
+  severity      AlertSeverity
+  title         String
+  description   String
+  isAcknowledged Boolean      @default(false)
+  createdAt     DateTime      @default(now())
+  vehicle       Vehicle       @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, createdAt])
+}
