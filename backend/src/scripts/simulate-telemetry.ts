@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const baseURL = "http://localhost:5000/api/v1/telemetry/ingest";
+const baseURL =
+  process.env.SIM_INGEST_URL ?? "http://localhost:5000/api/v1/telemetry/ingest";
 const deviceKey = process.env.DEVICE_INGEST_KEY ?? "device-ingest-secret";
 const vin = process.env.SIM_VIN ?? "MA1EVBATTERY001";
 
@@ -34,3 +35,4 @@ setInterval(() => {
     console.error(err.response?.data ?? err.message);
   });
 }, 5000);
+
